@@ -42,7 +42,7 @@ filePaths = {"Base": LAST_FILE_PATH,
              "Nucleotide fit suffix": ".gtr_fit",
              "Codon fit suffix": ".codon_fit",
              "Grid information": ".grid_info",
-             "MCMC samples": ".samples",
+             "Converged prior": ".thetaBar",
              "Output": ".fubar.csv",
              "SimGrid": ".sim_grid_info",
              "SimFitFile": ".sim_codon_fit"};
@@ -99,40 +99,20 @@ else
 
 fprintf (stdout, "\n\n");
 
-_fubarMCMCSamplesLocation = filePaths["Base"] + filePaths["MCMC samples"];
+_fubarMCMCSamplesLocation = filePaths["Base"] + "";
 
-if (_cachingOK && !_fubarMCMCSamplesLocation) {
-     fscanf (_fubarMCMCSamplesLocation, "Number", _fubarChainCount);
-     fprintf (stdout, "[CACHED] FUBAR found the MCMC samples based on ", _fubarChainCount, " chains at ", _fubarMCMCSamplesLocation, "\n"); 
-}
-else
 {
     _cachingOK = 0;
-    _fubarChainCount = prompt_for_a_value ("Number of MCMC chains to run",5,2,20,1);
-    fprintf (stdout, "[DIAGNOSTIC] FUBAR will use run ", _fubarChainCount, " independent chains\n"); 
-    _fubarChainLength  = prompt_for_a_value ("The length of each chain",2000000,500000,100000000,1);    
-    fprintf (stdout, "[DIAGNOSTIC] FUBAR will run the chains for ", _fubarChainLength, " steps\n"); 
-    _fubarChainBurnin  = prompt_for_a_value ("Discard this many samples as burn-in",_fubarChainLength$2,_fubarChainLength$20,_fubarChainLength*95$100,1);
-    fprintf (stdout, "[DIAGNOSTIC] FUBAR will run discard ", _fubarChainBurnin, " steps as burn-in\n"); 
-    _fubarTotalSamples = prompt_for_a_value ("How many samples should be drawn from each chain",100,10,_fubarChainLength-_fubarChainBurnin,1);    
-    fprintf (stdout, "[DIAGNOSTIC] FUBAR will run thin each chain down to ", _fubarTotalSamples, " samples\n"); 
     _fubarPriorShape = prompt_for_a_value ("The concentration parameter of the Dirichlet prior",0.5,0.001,1,0);    
     fprintf (stdout, "[DIAGNOSTIC] FUBAR will use the Dirichlet prior concentration parameter of ", _fubarPriorShape, "\n"); 
 
     ExecuteAFile (Join(DIRECTORY_SEPARATOR,{{PATH_TO_CURRENT_BF[0][Abs(PATH_TO_CURRENT_BF)-2],"FUBAR_HBL","FUBAR_PHASE_3.bf"}}), {"0" : _fubarMCMCSamplesLocation,
                                                                                                                                  "1" : _fubarGridInfoLocation,
-                                                                                                                                 "2" : "" + _fubarChainCount,
-                                                                                                                                 "3" : "" + _fubarChainLength,
-                                                                                                                                 "4" : "" + _fubarChainBurnin,
-                                                                                                                                 "5" : "" + _fubarTotalSamples,
-                                                                                                                                 "6" : "" + _fubarPriorShape
+                                                                                                                                 "2" : "" + _fubarPriorShape
                                                                                                                                   });
-                                                                                                                                        
-                                                                                                            
-                                                                                                                                 
-    fprintf (stdout, "\n[DIAGNOSTIC] FUBAR wrote samples from ", _fubarChainCount, " independent chains to ", _fubarMCMCSamplesLocation, "[0-", _fubarChainCount-1, "]\n"); 
 }
 
+//START FROM HERE
 //----------------------------------------------------------------------------
 // PHASE 4: PROCESSING & FDR Simulation
 //----------------------------------------------------------------------------
@@ -142,10 +122,12 @@ fprintf (stdout, "\n\n");
 _fubarResultLocation = filePaths["Base"] + filePaths["Output"];
 _fubarSimGrid        = filePaths["Base"] + filePaths["SimGrid"];
 _fubarSimFitFile     = filePaths["Base"] + filePaths["SimFitFile"];
+_fubarConvergedPriorFile = filePaths["Base"] + filePaths["Converged prior"];
+
 
 _fubar_do_simulations = 0;
 
-if (_cachingOK && !_fubarResultLocation && (_fubar_do_simulations == 0 || (!_fubarSimGrid && !_fubarSimFitFile))) {
+if (_cachingOK && !_fubarResultLocation) {
      fprintf (stdout, "[CACHED] FUBAR found the results file at ",_fubarResultLocation  ,"\n"); 
 }
 else
@@ -153,23 +135,13 @@ else
 
     ExecuteAFile (Join(DIRECTORY_SEPARATOR,{{PATH_TO_CURRENT_BF[0][Abs(PATH_TO_CURRENT_BF)-2],"FUBAR_HBL","FUBAR_PHASE_4.bf"}}), {"0" : _fubarNucFitLocation,
                                                                                                                                  "1" : _fubarGridInfoLocation,
-                                                                                                                                 "2" : _fubarMCMCSamplesLocation,
-                                                                                                                                 "3" : "" + _fubarChainCount,
-                                                                                                                                 "4" : _fubarResultLocation,
-                                                                                                                                 "5" : _fubarSimFitFile,
-                                                                                                                                 "6" : _fubarSimGrid,
-                                                                                                                                 "7" : _fubarCodonFitLocation
-                                                                                                                                  });
-                                                                                                                                        
-                                                                                                            
-                                                                                                                                 
+                                                                                                                                 "2" : _fubarConvergedPriorFile,
+                                                                                                                                 "3" : _fubarResultLocation
+                                                                                                                                  });                                                                                                                                     
     fprintf (stdout, "\n[DIAGNOSTIC] FUBAR wrote the results of its analysis to ", _fubarResultLocation, "\n"); 
-    if (_fubar_do_simulations) {
-        fprintf (stdout, "[DIAGNOSTIC] FUBAR wrote FDR simulation data to ", _fubarSimFitFile, "\n"); 
-        fprintf (stdout, "[DIAGNOSTIC] FUBAR wrote FDR grid information to ", _fubarSimFitFile, "\n"); 
-    }
 }
 
+/*
 fubar_data = (ReadCSVTable (_fubarResultLocation, 1))[1]%4;
 
 ExecuteAFile (Join(DIRECTORY_SEPARATOR,{{PATH_TO_CURRENT_BF[0][Abs(PATH_TO_CURRENT_BF)-2],"FUBAR_HBL","FUBAR_tools.ibf"}}));
@@ -207,3 +179,4 @@ if (idx == Rows(fubar_data) ) {
     }
     fprintf (stdout, "\n");
 }
+*/

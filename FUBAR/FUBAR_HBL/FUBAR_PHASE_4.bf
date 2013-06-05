@@ -1,106 +1,45 @@
 fscanf              (stdin, "String", nuc_fit_file);
 fscanf              (stdin, "String", grid_file);
-fscanf              (stdin, "String", sample_base_file);
-fscanf              (stdin, "Number", _chainCount);
+fscanf              (stdin, "String", weights_file);
 fscanf              (stdin, "String", results_file);
-
-// for PHASE 5
-fscanf (stdin, "String", sim_fit_file);
-fscanf (stdin, "String", sim_grid_info);
-fscanf (stdin, "String", codon_fit_file);
 
 ExecuteAFile        (PATH_TO_CURRENT_BF + "FUBAR_tools.ibf");
 LoadFunctionLibrary ("GrabBag");
 LoadFunctionLibrary ("WriteDelimitedFiles");
 
-ExecuteAFile        (nuc_fit_file);
-sequences = nucData_1.species;
-GetInformation (treeCount,"^nuc_tree_[0-9]+$");
-fileCount       = Columns (treeCount);
-treeLengths     = {fileCount,1};
-
-for (fileID = 1; fileID <= fileCount; fileID += 1)
-{
-	treeLengths [fileID-1] = + Eval("BranchLength(nuc_tree_"+fileID+",-1)");
-}
-
 fscanf (grid_file, REWIND, "NMatrix,Raw", grid, site_probs);
+fscanf (weights_file, REWIND, "NMatrix", learntWeights);
+
 site_probs = Eval (site_probs);
 sites   = Columns (site_probs["conditionals"]);
 
+transWeights = Transpose(learntWeights);
 
-readMCMCSamples (sample_base_file,_chainCount);
+positive_selection_stencil = {points,sites} ["grid[_MATRIX_ELEMENT_ROW_][0]<grid[_MATRIX_ELEMENT_ROW_][1]"];
+negative_selection_stencil = {points,sites} ["grid[_MATRIX_ELEMENT_ROW_][0]>grid[_MATRIX_ELEMENT_ROW_][1]"];
+diag_alpha = {points,points}["grid[_MATRIX_ELEMENT_ROW_][0]*(_MATRIX_ELEMENT_ROW_==_MATRIX_ELEMENT_COLUMN_)"];
+diag_beta  = {points,points}["grid[_MATRIX_ELEMENT_ROW_][1]*(_MATRIX_ELEMENT_ROW_==_MATRIX_ELEMENT_COLUMN_)"];
+    
+norm_matrix         = (transWeights*site_probs["conditionals"]);
+pos_sel_matrix      = (transWeights*(site_probs["conditionals"]$positive_selection_stencil) / norm_matrix);
+neg_sel_matrix      = (transWeights*(site_probs["conditionals"]$negative_selection_stencil) / norm_matrix);
+alpha_matrix        = ((transWeights*diag_alpha*site_probs["conditionals"])/norm_matrix);
+beta_matrix         = ((transWeights*diag_beta*site_probs["conditionals"])/norm_matrix);
 
-
-notPositiveSelection = {points,1} ["grid[_MATRIX_ELEMENT_ROW_][0]>=grid[_MATRIX_ELEMENT_ROW_][1]"];
-nonPositiveCount     = +notPositiveSelection;
-
-priorMean            = {1, points};
-sampleFromThisDistro = {nonPositiveCount,2};
-
-tabulateGridResults (points, sites, samples, _chainCount);
-
-from = 0;
-for (_point = 0; _point < points; _point += 1) {
-    priorMean [_point] = (+jointSamples[-1][_point])/samples;
-    if (notPositiveSelection [_point]) {
-        sampleFromThisDistro [from][0] = _point;
-        sampleFromThisDistro [from][1] = priorMean [_point];
-        from += 1;
+bySitePosSel = {sites,5};
+for (s = 0; s < sites; s+=1) {
+    	SetParameter (STATUS_BAR_STATUS_STRING, "Tabulating results for site "+ s + "/" + sites + " " + _formatTimeString(Time(1)-t0),0);
+    	bySitePosSel [s][0] = alpha_matrix[s]; 
+    	bySitePosSel [s][1] = beta_matrix[s];
+    	bySitePosSel [s][2] = neg_sel_matrix[s];
+    	bySitePosSel [s][3] = pos_sel_matrix[s];
     }
-}
 
-priorNN = +(sampleFromThisDistro [-1][1]);
-fubar_results = reportSiteResults   (sites, 0, priorNN, _fubar_do_simulations);
-fubarRowCount     = Rows (fubar_results);
-
-if (_fubar_do_simulations) {
-    simPatterns = Random(sampleFromThisDistro, {"PDF":"Multinomial","ARG0":1000});
-    fprintf (sample_base_file, CLEAR_FILE, _chainCount, "\n", jointLogL, "\n", jointSamples);
-    
-    fprintf (stdout, "\n[FUBAR PHASE 5] Performing 1,000 simulations under the data-derived composite null model to derive False Discovery Rate (FDR) estimates\n");
-    ExecuteAFile (PATH_TO_CURRENT_BF + "FUBAR_PHASE_5.bf");
-    
-    // sort posteriorsUnderNN on the posterior prob of pos.sel. column
-    
-    posteriorsNNPP    = (posteriorsUnderNN[-1][3]) % 0;
-    sortedFubarP      = ({Rows (fubar_results), 2} ["_MATRIX_ELEMENT_ROW_*(_MATRIX_ELEMENT_COLUMN_==0)+fubar_results[_MATRIX_ELEMENT_ROW_][3]*(_MATRIX_ELEMENT_COLUMN_==1)"])%1;
-    
-    currentNNRows     = Rows (posteriorsUnderNN);
-    
-    currentNNIndex    = currentNNRows - 1;
-    
-    
-    for (currentFubarIndex =  fubarRowCount - 1; currentFubarIndex >= 0; currentFubarIndex += -1) {
-        currentFubarPosteriorP = sortedFubarP[currentFubarIndex][1];
-        
-        while (currentNNIndex > 0 && posteriorsNNPP[currentNNIndex] > currentFubarPosteriorP) {
-            currentNNIndex = currentNNIndex - 1;
-        }
-        
-        FDR = Min (1,(currentNNRows-currentNNIndex)/currentNNRows * priorNN / ((fubarRowCount-currentFubarIndex) / fubarRowCount));
-        
-        if (currentNNIndex == 0) {
-            break;
-        }
-        fubar_results[sortedFubarP[currentFubarIndex][0]][7] = FDR;
-        
-    }
-    
-    for (; currentFubarIndex >= 0; currentFubarIndex += -1) {
-        FDR = Min (1, priorNN / ((fubarRowCount-currentFubarIndex) / fubarRowCount));
-        fubar_results[sortedFubarP[currentFubarIndex][0]][7] = FDR;
-    }
-}
-
+ 
+fubarRowCount     = Rows (bySitePosSel);
 site_counter = {};
 for (currentFubarIndex = 0; currentFubarIndex < fubarRowCount; currentFubarIndex += 1) {
     site_counter + (currentFubarIndex+1);
 }
 
-if (_fubar_do_simulations) {
-    WriteSeparatedTable (results_file, {{"Codon","alpha","beta","beta-alpha","Prob[alpha<beta]", "Prob[alpha>beta]", "BayesFactor","PSRF", "Neff", "FDR"}}, fubar_results, site_counter, ",");
-} else {
-    WriteSeparatedTable (results_file, {{"Codon","alpha","beta","beta-alpha","Prob[alpha<beta]", "Prob[alpha>beta]", "BayesFactor","PSRF", "Neff"}}, fubar_results, site_counter, ",");
-}
- 
+WriteSeparatedTable (results_file, {{"Codon","alpha","beta","Prob[alpha>beta]", "Prob[beta>alpha]"}}, bySitePosSel, site_counter, ",");
