@@ -141,7 +141,7 @@ else
     fprintf (stdout, "\n[DIAGNOSTIC] FUBAR wrote the results of its analysis to ", _fubarResultLocation, "\n"); 
 }
 
-/*
+
 fubar_data = (ReadCSVTable (_fubarResultLocation, 1))[1]%4;
 
 ExecuteAFile (Join(DIRECTORY_SEPARATOR,{{PATH_TO_CURRENT_BF[0][Abs(PATH_TO_CURRENT_BF)-2],"FUBAR_HBL","FUBAR_tools.ibf"}}));
@@ -163,20 +163,11 @@ if (idx == Rows(fubar_data) ) {
     fprintf (stdout, "there were no sites under diversifying positive selection\n");
 } else {
     detected = Rows(fubar_data)-idx;
-    ci = computeENFP_CI (p_i, 0.05);
-    fprintf (stdout, "there were ", detected, " sites under diversifying positive selection, of which ", Format (mean_pp, 5,2), " [", ci[0], " - ", ci[1], "] are expected to be false positives.\n");
-    _fubar_did_simulations = Columns(fubar_data) > 9;
-    if (_fubar_did_simulations) {
-        fprintf (stdout, "\nCodon\tProb[dN/dS>1]\tEBF[dN/dS]>1\tPSRF\tN_eff\tFDR");
+    fprintf (stdout, "there were ", detected, " sites under diversifying positive selection.\n");
+        fprintf (stdout, "\nCodon\tProb[dN/dS>1]\t\tEBF[dN/dS]>1");
         for (idx2 = Rows(fubar_data)-1; idx2 >= idx; idx2 += -1) {
-            fprintf (stdout, "\n", fubar_data[idx2][0], "\t",  fubar_data[idx2][4], "\t",  fubar_data[idx2][6], "\t", fubar_data[idx2][7], "\t",  fubar_data[idx2][8], "\t",  fubar_data[idx2][9]); 
-        }
-    } else {
-        fprintf (stdout, "\nCodon\tProb[dN/dS>1]\tEBF[dN/dS]>1\tPSRF\tN_eff");
-        for (idx2 = Rows(fubar_data)-1; idx2 >= idx; idx2 += -1) {
-            fprintf (stdout, "\n", fubar_data[idx2][0], "\t",  fubar_data[idx2][4], "\t",  fubar_data[idx2][6], "\t", fubar_data[idx2][7], "\t",  fubar_data[idx2][8]); 
+            fprintf (stdout, "\n", fubar_data[idx2][0], "\t",  fubar_data[idx2][4], "\t",  fubar_data[idx2][5]); 
         }    
     }
     fprintf (stdout, "\n");
 }
-*/

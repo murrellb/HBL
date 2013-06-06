@@ -15,6 +15,9 @@ sites   = Columns (site_probs["conditionals"]);
 
 transWeights = Transpose(learntWeights);
 
+P_selection_stamp = {points,1} ["grid[_MATRIX_ELEMENT_ROW_][0]<grid[_MATRIX_ELEMENT_ROW_][1]"];
+P_prior = +(learntWeights$P_selection_stamp);
+
 positive_selection_stencil = {points,sites} ["grid[_MATRIX_ELEMENT_ROW_][0]<grid[_MATRIX_ELEMENT_ROW_][1]"];
 negative_selection_stencil = {points,sites} ["grid[_MATRIX_ELEMENT_ROW_][0]>grid[_MATRIX_ELEMENT_ROW_][1]"];
 diag_alpha = {points,points}["grid[_MATRIX_ELEMENT_ROW_][0]*(_MATRIX_ELEMENT_ROW_==_MATRIX_ELEMENT_COLUMN_)"];
@@ -22,6 +25,8 @@ diag_beta  = {points,points}["grid[_MATRIX_ELEMENT_ROW_][1]*(_MATRIX_ELEMENT_ROW
     
 norm_matrix         = (transWeights*site_probs["conditionals"]);
 pos_sel_matrix      = (transWeights*(site_probs["conditionals"]$positive_selection_stencil) / norm_matrix);
+//pos_sel_samples[0] / (1-pos_sel_samples[0]) / (1-priorNN) * priorNN
+pos_sel_bfs= pos_sel_matrix["pos_sel_matrix[_MATRIX_ELEMENT_COLUMN_]/(1-pos_sel_matrix[_MATRIX_ELEMENT_COLUMN_])/ P_prior * (1-P_prior)"];
 neg_sel_matrix      = (transWeights*(site_probs["conditionals"]$negative_selection_stencil) / norm_matrix);
 alpha_matrix        = ((transWeights*diag_alpha*site_probs["conditionals"])/norm_matrix);
 beta_matrix         = ((transWeights*diag_beta*site_probs["conditionals"])/norm_matrix);
@@ -33,6 +38,7 @@ for (s = 0; s < sites; s+=1) {
     	bySitePosSel [s][1] = beta_matrix[s];
     	bySitePosSel [s][2] = neg_sel_matrix[s];
     	bySitePosSel [s][3] = pos_sel_matrix[s];
+    	bySitePosSel [s][4] = pos_sel_bfs[s];
     }
 
  
@@ -42,4 +48,4 @@ for (currentFubarIndex = 0; currentFubarIndex < fubarRowCount; currentFubarIndex
     site_counter + (currentFubarIndex+1);
 }
 
-WriteSeparatedTable (results_file, {{"Codon","alpha","beta","Prob[alpha>beta]", "Prob[beta>alpha]"}}, bySitePosSel, site_counter, ",");
+WriteSeparatedTable (results_file, {{"Codon","alpha","beta","Prob[alpha>beta]", "Prob[beta>alpha]","BF[beta>alpha]"}}, bySitePosSel, site_counter, ",");
