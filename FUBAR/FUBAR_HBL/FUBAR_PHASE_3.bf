@@ -32,6 +32,7 @@ while (diffSum > 0.0000001) {
 	 phiUN = {points,sites}["normalized_weights[_MATRIX_ELEMENT_ROW_][_MATRIX_ELEMENT_COLUMN_]*weights[_MATRIX_ELEMENT_ROW_]"];
 	 phiNormalizers  = ({1,points}["1"])*phiUN;
 	 phi = phiUN*({sites,sites}["1/phiNormalizers[_MATRIX_ELEMENT_ROW_]*(_MATRIX_ELEMENT_ROW_==_MATRIX_ELEMENT_COLUMN_)"]);
+	 //Would have thought this would be faster, but NUUUUUUU.
 	 //phi = {points,sites}["phiUN[_MATRIX_ELEMENT_ROW_][_MATRIX_ELEMENT_COLUMN_]/phiNormalizers[_MATRIX_ELEMENT_COLUMN_]"];
 	 weights = (phi * ({sites,1}["1"]))+priorvec;
 	 weights = weights * (1/(+weights));

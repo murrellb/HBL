@@ -99,14 +99,20 @@ else
 
 fprintf (stdout, "\n\n");
 
-_fubarMCMCSamplesLocation = filePaths["Base"] + "";
+_fubarWeightLocation = filePaths["Base"] + filePaths["Converged prior"];
 
-{
+if (_cachingOK && !_fubarWeightLocation) {
+// file exists 
+     fprintf (stdout, "[CACHED] FUBAR found the learned weights at ", _fubarWeightLocation, "\n"); 
+}
+else
+{	
+	_fubarMCMCBaseLocation = filePaths["Base"];
     _cachingOK = 0;
     _fubarPriorShape = prompt_for_a_value ("The concentration parameter of the Dirichlet prior",0.5,0.001,1,0);    
     fprintf (stdout, "[DIAGNOSTIC] FUBAR will use the Dirichlet prior concentration parameter of ", _fubarPriorShape, "\n"); 
 
-    ExecuteAFile (Join(DIRECTORY_SEPARATOR,{{PATH_TO_CURRENT_BF[0][Abs(PATH_TO_CURRENT_BF)-2],"FUBAR_HBL","FUBAR_PHASE_3.bf"}}), {"0" : _fubarMCMCSamplesLocation,
+    ExecuteAFile (Join(DIRECTORY_SEPARATOR,{{PATH_TO_CURRENT_BF[0][Abs(PATH_TO_CURRENT_BF)-2],"FUBAR_HBL","FUBAR_PHASE_3.bf"}}), {"0" : _fubarMCMCBaseLocation,
                                                                                                                                  "1" : _fubarGridInfoLocation,
                                                                                                                                  "2" : "" + _fubarPriorShape
                                                                                                                                   });
@@ -164,9 +170,9 @@ if (idx == Rows(fubar_data) ) {
 } else {
     detected = Rows(fubar_data)-idx;
     fprintf (stdout, "there were ", detected, " sites under diversifying positive selection.\n");
-        fprintf (stdout, "\nCodon\tProb[dN/dS>1]\t\tEBF[dN/dS]>1");
+        fprintf (stdout, "\nCodon\tProb[dN/dS>1]\t\tEBF[dN/dS]>1\t\tE[Beta]/E[Alpha]");
         for (idx2 = Rows(fubar_data)-1; idx2 >= idx; idx2 += -1) {
-            fprintf (stdout, "\n", fubar_data[idx2][0], "\t",  fubar_data[idx2][4], "\t",  fubar_data[idx2][5]); 
+            fprintf (stdout, "\n", fubar_data[idx2][0], "\t",  fubar_data[idx2][4], "\t",  fubar_data[idx2][5],"\t",fubar_data[idx2][2]/fubar_data[idx2][1]); 
         }    
     }
     fprintf (stdout, "\n");

@@ -14,18 +14,14 @@ site_probs = Eval (site_probs);
 sites   = Columns (site_probs["conditionals"]);
 
 transWeights = Transpose(learntWeights);
-
 P_selection_stamp = {points,1} ["grid[_MATRIX_ELEMENT_ROW_][0]<grid[_MATRIX_ELEMENT_ROW_][1]"];
 P_prior = +(learntWeights$P_selection_stamp);
-
 positive_selection_stencil = {points,sites} ["grid[_MATRIX_ELEMENT_ROW_][0]<grid[_MATRIX_ELEMENT_ROW_][1]"];
 negative_selection_stencil = {points,sites} ["grid[_MATRIX_ELEMENT_ROW_][0]>grid[_MATRIX_ELEMENT_ROW_][1]"];
 diag_alpha = {points,points}["grid[_MATRIX_ELEMENT_ROW_][0]*(_MATRIX_ELEMENT_ROW_==_MATRIX_ELEMENT_COLUMN_)"];
 diag_beta  = {points,points}["grid[_MATRIX_ELEMENT_ROW_][1]*(_MATRIX_ELEMENT_ROW_==_MATRIX_ELEMENT_COLUMN_)"];
-    
 norm_matrix         = (transWeights*site_probs["conditionals"]);
 pos_sel_matrix      = (transWeights*(site_probs["conditionals"]$positive_selection_stencil) / norm_matrix);
-//pos_sel_samples[0] / (1-pos_sel_samples[0]) / (1-priorNN) * priorNN
 pos_sel_bfs= pos_sel_matrix["pos_sel_matrix[_MATRIX_ELEMENT_COLUMN_]/(1-pos_sel_matrix[_MATRIX_ELEMENT_COLUMN_])/ P_prior * (1-P_prior)"];
 neg_sel_matrix      = (transWeights*(site_probs["conditionals"]$negative_selection_stencil) / norm_matrix);
 alpha_matrix        = ((transWeights*diag_alpha*site_probs["conditionals"])/norm_matrix);
