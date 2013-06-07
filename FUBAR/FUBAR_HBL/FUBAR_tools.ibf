@@ -349,3 +349,57 @@ function computeRandNeff (sampledValues) {
         
     return      {{overallMean, Sqrt(VarEst/W), VarEst/B*chainCount*chainLength, B, W, VarEst}};
 }
+
+//--------------------------------------------------------------------------------//
+
+function vectorToMatrix(columnVector, rows)
+{
+	npoints = Rows(columnVector);
+	if(npoints % rows != 0)
+	{
+		fprintf(stdout, "vectorToMatrix:", npoints, " is not divisible by ", rows,".\n");
+		return 0;
+	}
+	
+	columns = npoints / rows;
+	matrixret = {rows, columns};
+	index = 0;
+	for(_x = 0 ; _x < rows ; _x += 1)
+	{
+		for(_y = 0 ; _y < columns ; _y += 1)
+		{
+			matrixret[_x][_y] = columnVector[index];
+			index += 1;
+		}
+	}
+
+	return matrixret;
+}
+
+//--------------------------------------------------------------------------------//
+
+function vectorToMatrixCSVstring(columnVector, rows)
+{
+	npoints = Rows(columnVector);
+	if(npoints % rows != 0)
+	{
+		fprintf(stdout, "vectorToMatrix:", npoints, " is not divisible by ", rows,".\n");
+		return 0;
+	}
+	
+	columns = npoints / rows;
+	matrixret = "";
+	index = 0;
+	for(_x = 0 ; _x < rows ; _x += 1)
+	{
+		matrixret = matrixret+(1+_x);
+		for(_y = 0 ; _y < columns ; _y += 1)
+		{
+			matrixret = matrixret + ","+columnVector[index];
+			index += 1;
+		}
+		matrixret = matrixret+"\n";
+	}
+
+	return matrixret;
+}
