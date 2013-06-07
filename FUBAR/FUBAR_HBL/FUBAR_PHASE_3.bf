@@ -14,9 +14,10 @@ sites              = Columns(gridInfo["conditionals"]);
 normalize_by_site  = ({1,points}["1"])*(gridInfo["conditionals"]);
 normalized_weights = (gridInfo["conditionals"])*({sites,sites}["1/normalize_by_site[_MATRIX_ELEMENT_ROW_]*(_MATRIX_ELEMENT_ROW_==_MATRIX_ELEMENT_COLUMN_)"]);
 sum_by_site        = normalized_weights * ({sites,1}["1"]);
-//priorvec		= {points,1}["_concentration"];
+
 //Trying out a Dirichlet without symmetry
-priorvec		= {points,1}["3*_concentration*(grid[_MATRIX_ELEMENT_ROW_][0]==grid[_MATRIX_ELEMENT_ROW_][1])+_concentration"];
+priorvec		= {points,1}["_concentration"];
+//priorvec		= {points,1}["3*_concentration*(grid[_MATRIX_ELEMENT_ROW_][0]==grid[_MATRIX_ELEMENT_ROW_][1])+_concentration"];
 
 
    
