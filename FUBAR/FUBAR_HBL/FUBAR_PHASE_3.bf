@@ -48,5 +48,5 @@ fprintf (stdout, "\nTime taken:" + _formatTimeString(Time(1)-t0), "\n");
 
 convergefile = _sampleFile + ".thetaBar";
 fprintf (convergefile,CLEAR_FILE, weights);
-fprintf (_sampleFile +"_posterSurface.csv",CLEAR_FILE,vectorToMatrixCSVstring(oldweights,20),"\n");
-fprintf (_sampleFile +"_priorSurface.csv",CLEAR_FILE,vectorToMatrixCSVstring(priorvec*(1/(+priorvec)),20),"\n");
+fprintf (_sampleFile +"_posterSurface.csv",CLEAR_FILE,vectorToMatrixCSVstring(oldweights,Sqrt(points)),"\n");
+fprintf (_sampleFile +"_priorSurface.csv",CLEAR_FILE,vectorToMatrixCSVstring(priorvec*(1/(+priorvec)),Sqrt(points)),"\n");

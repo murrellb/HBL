@@ -29,7 +29,7 @@ restarted.
      trees/partitions if present 
 */
 
-_cachingOK = 1;
+_cachingOK = 0;
 
 ExecuteAFile (Join(DIRECTORY_SEPARATOR,{{HYPHY_LIB_DIRECTORY[0][Abs(HYPHY_LIB_DIRECTORY)-2],"TemplateBatchFiles","TemplateModels","chooseGeneticCode.def"}}));
 LoadFunctionLibrary ("GrabBag");
@@ -170,9 +170,9 @@ if (idx == Rows(fubar_data) ) {
 } else {
     detected = Rows(fubar_data)-idx;
     fprintf (stdout, "there were ", detected, " sites under diversifying positive selection.\n");
-        fprintf (stdout, "\nCodon\tProb[dN/dS>1]\t\tEBF[dN/dS]>1\t\tE[Beta]/E[Alpha]");
+        fprintf (stdout, "\nCodon  Prob[dN/dS>1]  EBF[dN/dS]>1  E[Beta]/E[Alpha]");
         for (idx2 = Rows(fubar_data)-1; idx2 >= idx; idx2 += -1) {
-            fprintf (stdout, "\n", fubar_data[idx2][0], "\t",  fubar_data[idx2][4], "\t",  fubar_data[idx2][5],"\t",fubar_data[idx2][2]/fubar_data[idx2][1]); 
+            fprintf (stdout, "\n", fubar_data[idx2][0], "\t",  Format(fubar_data[idx2][4],4,3), "  ",  Format(fubar_data[idx2][5],15,3),"  ",Format(fubar_data[idx2][2]/fubar_data[idx2][1],9,3)); 
         }    
     }
     fprintf (stdout, "\n");
